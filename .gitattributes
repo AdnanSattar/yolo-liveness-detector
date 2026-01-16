@@ -1,1 +1,4 @@
 model/*.pt filter=lfs diff=lfs merge=lfs -text
+model/*.onnx filter=lfs diff=lfs merge=lfs -text
+model/*.trt filter=lfs diff=lfs merge=lfs -text
+model/*.mlmodel filter=lfs diff=lfs merge=lfs -text
