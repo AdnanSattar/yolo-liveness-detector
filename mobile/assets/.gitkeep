@@ -1,0 +1,2 @@
+# ONNX model files should be placed here
+# anti_spoofing.onnx - Quantized ONNX model for mobile inference

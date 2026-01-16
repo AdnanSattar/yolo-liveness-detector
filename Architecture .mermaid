@@ -1,0 +1,25 @@
+graph TB
+    subgraph Web["Web Client"]
+        NextJS[Next.js App<br/>Tailwind + shadcn + Three.js]
+    end
+    
+    subgraph Mobile["Mobile Client"]
+        RN[React Native App<br/>On-Device ONNX Inference]
+    end
+    
+    subgraph Backend["Backend Services"]
+        FastAPI[FastAPI Service<br/>Docker Container]
+        Model[YOLOv8 Model<br/>ONNX/TensorRT]
+    end
+    
+    subgraph Training["Training Pipeline"]
+        Collect[Data Collection]
+        Split[Data Splitting]
+        Train[YOLO Training]
+        Export[ONNX Export]
+    end
+    
+    NextJS -->|HTTP/WebSocket| FastAPI
+    RN -->|Native Inference| Model
+    FastAPI --> Model
+    Training --> Model

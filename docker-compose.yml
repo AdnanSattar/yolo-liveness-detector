@@ -1,0 +1,63 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    container_name: anti-spoofing-api
+    ports:
+      - "8000:8000"
+    environment:
+      - MODEL_PATH=${MODEL_PATH:-/app/model/anti_spoofing.pt}
+      - CONFIDENCE_THRESHOLD=${CONFIDENCE_THRESHOLD:-0.6}
+      - DEVICE=${DEVICE:-auto}
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+      - API_PORT=8000
+    volumes:
+      - ./app:/app/app          # backend source for hot reload
+      - ./model:/app/model:ro   # model weights
+    # Dev command with hot reload
+    command: >
+      uvicorn app.main:app
+      --host 0.0.0.0
+      --port 8000
+      --reload
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:8000/v1/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  frontend:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.frontend
+    container_name: anti-spoofing-frontend
+    environment:
+      # IMPORTANT: this is used by the browser, so it must be reachable from the host, not inside Docker
+      - NEXT_PUBLIC_API_BASE_URL=http://localhost:8000
+      # Enable reliable file watching for hot reload inside Docker on Windows
+      - CHOKIDAR_USEPOLLING=true
+      - WATCHPACK_POLLING=true
+    ports:
+      - "3000:3000"
+    # Mount source for hot reload, keep container node_modules
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - api
+    restart: unless-stopped
+
+  # Optional: Nginx reverse proxy
+  # nginx:
+  #   image: nginx:alpine
+  #   container_name: anti-spoofing-nginx
+  #   ports:
+  #     - "80:80"
+  #   volumes:
+  #     - ./nginx.conf:/etc/nginx/nginx.conf:ro
+  #   depends_on:
+  #     - api
+  #   restart: unless-stopped
